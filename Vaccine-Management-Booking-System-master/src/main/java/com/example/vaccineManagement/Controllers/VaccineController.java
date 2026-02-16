@@ -1,0 +1,67 @@
+package com.example.vaccineManagement.Controllers;
+
+import com.example.vaccineManagement.Entity.Vaccine;
+import com.example.vaccineManagement.Services.VaccineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/vaccine")
+@CrossOrigin
+public class VaccineController {
+
+    @Autowired
+    private VaccineService vaccineService;
+
+    // 1. Add vaccine (without doctor)
+    @PostMapping("/add")
+    public ResponseEntity<String> addVaccine(@RequestBody Vaccine vaccine) {
+        try {
+            String result = vaccineService.addVaccine(vaccine);
+            return new ResponseEntity<>(result, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // 2. Associate existing vaccine with doctor
+    @PostMapping("/associate/{vaccineId}/doctor/{doctorId}")
+    public ResponseEntity<String> associateVaccine(@PathVariable int vaccineId,
+            @PathVariable int doctorId) {
+        try {
+            String result = vaccineService.associateVaccineWithDoctor(vaccineId, doctorId);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // 3. Get all vaccines
+    @GetMapping("/getAll")
+    public ResponseEntity<List<Vaccine>> getAllVaccines() {
+        List<Vaccine> list = vaccineService.getAllVaccines();
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+
+    // 4. Get vaccine by ID
+    @GetMapping("/get/{id}")
+    public ResponseEntity<Vaccine> getVaccineById(@PathVariable int id) {
+        try {
+            Vaccine vaccine = vaccineService.getVaccineById(id);
+            return new ResponseEntity<>(vaccine, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // 5. Get vaccines of a doctor
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<List<Vaccine>> getVaccinesByDoctor(@PathVariable int doctorId) {
+        List<Vaccine> list = vaccineService.getVaccinesByDoctorId(doctorId);
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+}
