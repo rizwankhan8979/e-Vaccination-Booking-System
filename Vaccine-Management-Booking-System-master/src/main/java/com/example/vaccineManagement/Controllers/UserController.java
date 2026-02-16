@@ -20,7 +20,7 @@ public class UserController
     @Autowired
     UserService userService;
 
-    // ================= 1. COMPLETE PROFILE =================
+    // COMPLETE PROFILE 
     @PostMapping("/add")
     public User addUser(
             @RequestBody User user,
@@ -31,7 +31,7 @@ public class UserController
     }
 
 
-    // ================= 2. GET MY PROFILE =================
+    // GET MY PROFILE 
     @GetMapping("/profile")
     public User getMyProfile(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal
@@ -39,7 +39,7 @@ public class UserController
         return userService.getMyProfile(principal.getUsername());
     }
 
-    // ================= 3. GET VACCINATION DATE =================
+    // GET VACCINATION DATE 
     @GetMapping("/getVaccinationDate")
     public Date getVaccinationDate(@RequestParam Integer userId) {
         return userService.getVaccDate(userId);
