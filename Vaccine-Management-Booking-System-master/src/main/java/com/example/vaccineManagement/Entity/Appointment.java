@@ -1,6 +1,5 @@
 package com.example.vaccineManagement.Entity;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,13 +26,14 @@ public class Appointment {
 
     private LocalTime appointmentTime;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn
     private Doctor doctor;
 
     @ManyToOne
     @JoinColumn
-    private Vaccine vaccine;   // ✅ ADD THIS
+    private Vaccine vaccine; // ✅ ADD THIS
 
     @JsonIgnore
     @ManyToOne

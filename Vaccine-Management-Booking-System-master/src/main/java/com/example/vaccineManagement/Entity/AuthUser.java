@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Entity
 @Data
-@Table(name="auth_users")
+@Table(name = "auth_users")
 public class AuthUser {
 
     @Id
@@ -16,13 +16,13 @@ public class AuthUser {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
     private boolean emailVerified = false;
-
 
     // Yeh mapping add ki hai user details fetch karne ke liye
     // mappedBy ka matlab hai ki foreign key 'User' table mein hai

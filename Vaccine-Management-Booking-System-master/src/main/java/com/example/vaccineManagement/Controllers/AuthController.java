@@ -1,69 +1,103 @@
 package com.example.vaccineManagement.Controllers;
 
-
+import com.example.vaccineManagement.AppSecurity.JwtService;
 import com.example.vaccineManagement.Dtos.AuthDtos.*;
 import com.example.vaccineManagement.Entity.AuthUser;
 import com.example.vaccineManagement.Services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
-    //REGISTER
+    @Autowired
+    private  AuthenticationManager authenticationManager;
+    @Autowired
+    private  JwtService jwtService;
+
+    // REGISTER
     @PostMapping("/register")
-    public AuthResponseDto register(@RequestBody RegisterRequestDto dto) {
-        return new AuthResponseDto(authService.register(dto));
+    public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterRequestDto dto) {
+        try {
+            String result = authService.register(dto);
+            return new ResponseEntity<>(new AuthResponseDto(result), HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDto(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
     }
 
-    //OTP VERIFY
+    // OTP VERIFY
     @PostMapping("/verify-email")
-    public AuthResponseDto verifyEmail(@RequestBody VerifyOtpDto dto) {
-        String msg = authService.verifyEmail(dto.getEmail(), dto.getOtp());
-        return new AuthResponseDto(msg);
+    public ResponseEntity<AuthResponseDto> verifyEmail(@RequestBody VerifyOtpDto dto) {
+        try {
+            String msg = authService.verifyEmail(dto.getEmail(), dto.getOtp());
+            return new ResponseEntity<>(new AuthResponseDto(msg), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDto(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
     }
 
-    // LOGIN
     @PostMapping("/login")
-    public AuthResponseDto login(@RequestBody LoginRequestDto dto) {
-        String message = authService.login(dto);
-        return new AuthResponseDto(message);
+    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginRequestDto dto) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        dto.getEmail(),
+                        dto.getPassword()
+                )
+        );
+
+        String token = jwtService.generateToken(dto.getEmail());
+
+        return ResponseEntity.ok(
+                new AuthResponseDto("Login Successful", token)
+        );
     }
 
     // update email
     @PutMapping("/update-email")
-    public AuthResponseDto updateEmail(
+    public ResponseEntity<AuthResponseDto> updateEmail(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
-            @RequestBody UpdateEmailRequestDto dto
-    ) {
-        return new AuthResponseDto(
-                authService.updateEmail(principal.getUsername(), dto)
-        );
+            @RequestBody UpdateEmailRequestDto dto) {
+        try {
+            String result = authService.updateEmail(principal.getUsername(), dto);
+            return new ResponseEntity<>(new AuthResponseDto(result), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDto(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
     }
-
 
     @PostMapping("/verify-update-otp")
-    public AuthResponseDto verifyUpdateOtp(
+    public ResponseEntity<AuthResponseDto> verifyUpdateOtp(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
-            @RequestBody VerifyUpdateEmailDto dto // Naya DTO banana padega
-    ) {
-        return new AuthResponseDto(
-                authService.verifyUpdateEmail(principal.getUsername(), dto.getNewEmail(), dto.getOtp())
-        );
+            @RequestBody VerifyUpdateEmailDto dto) {
+        try {
+            String result = authService.verifyUpdateEmail(principal.getUsername(), dto.getNewEmail(), dto.getOtp());
+            return new ResponseEntity<>(new AuthResponseDto(result), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDto(e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
     }
-
-
 
     // find by email
     @GetMapping("/by-email/{email}")
-    public AuthUser findByEmail(@PathVariable String email) {
-        return authService.findByEmail(email);
+    public ResponseEntity<?> findByEmail(@PathVariable String email) {
+        try {
+            AuthUser authUser = authService.findByEmail(email);
+            return new ResponseEntity<>(authUser, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDto(e.getMessage()), HttpStatus.NOT_FOUND);
+        }
     }
-
 
 }

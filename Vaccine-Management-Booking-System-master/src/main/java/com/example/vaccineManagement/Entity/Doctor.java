@@ -33,16 +33,17 @@ public class Doctor {
     @Column(unique = true, nullable = false)
     private String emailId;
 
-    // ---- RELATION WITH VACCINATION CENTER ----
+    // RELATION WITH VACCINATION CENTER
     @ManyToOne
-    @JoinColumn(name = "center_id")  // foreign key column name in doctor table
+    @JoinColumn(name = "center_id") // foreign key column name in doctor table
+    @JsonIgnore
     private VaccinationCenter vaccinationCenter;
 
-    // ---- RELATION WITH APPOINTMENT ----
+    // RELATION WITH APPOINTMENT
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> appointmentList = new ArrayList<>();
 
-    // ---- RELATION WITH VACCINE ----
+    // RELATION WITH VACCINE
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Vaccine> vaccineList = new ArrayList<>();

@@ -1,6 +1,5 @@
 package com.example.vaccineManagement.Services;
 
-
 import com.example.vaccineManagement.Entity.Dose;
 import com.example.vaccineManagement.Entity.User;
 import com.example.vaccineManagement.Repository.DoseRepository;
@@ -17,24 +16,28 @@ public class DoseService {
     @Autowired
     UserRepository userRepository;
 
-    public String giveDose(String doseId, Integer userId){
+    public String giveDose(String doseId, Integer userId) {
 
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        //An Entity of that model has been created
-        //This entity will be saved in the database
+        if (user.getDose() != null) {
+            return "User already has a dose assigned.";
+        }
+
+        // An Entity of that model has been created
+        // This entity will be saved in the database
         Dose dose = new Dose();
 
-        //setting its attributes
+        // setting its attributes
         dose.setDoseId(doseId);
         dose.setUser(user);
 
-        //Setting the child object in that corresponding
+        // Setting the child object in that corresponding
         user.setDose(dose);
 
         userRepository.save(user);
 
-        //Child will automatically get saved because of cascading effect.
+        // Child will automatically get saved because of cascading effect.
 
         return "Dose Given to user successfully";
     }

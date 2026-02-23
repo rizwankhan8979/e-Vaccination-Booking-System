@@ -11,6 +11,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity
@@ -18,11 +22,13 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtAuthFilter jwtAuthFilter;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, JwtAuthFilter jwtAuthFilter) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtAuthFilter=jwtAuthFilter;
     }
 
     // Authentication Provider
@@ -45,29 +51,67 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
-                        // All Permit Apis(sab dekhna chahen access kar sakte hain)
-                        .requestMatchers(new AntPathRequestMatcher("/auth/verify-email")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/vaccine/getAll")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/vaccine/get/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/vaccine/doctor/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/doctor/getAll")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/vaccinationCenter/getAll")).permitAll()
-                        // All User Access Apis(Only User hi access kar paayega saari apis ko yahan)
-                        .requestMatchers(new AntPathRequestMatcher("/user/**")).hasRole("USER")
-                        .requestMatchers(new AntPathRequestMatcher("/appointment/book")).hasRole("USER")
-                        // All Admin Access Apis(admin access only all apis)
-                        .requestMatchers(new AntPathRequestMatcher("/doctor/add")).hasRole("ADMIN")
-                        .requestMatchers(new AntPathRequestMatcher("/doctor/associateWithCenter")).hasRole("ADMIN")
-                        .requestMatchers(new AntPathRequestMatcher("/doctor/**")).hasRole("ADMIN")
-                        .requestMatchers(new AntPathRequestMatcher("/vaccinationCenter/**")).hasRole("ADMIN")
-                        .requestMatchers(new AntPathRequestMatcher("/vaccine/**")).hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .cors(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults());
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/vaccine/getAll",
+                                "/vaccine/get/**",
+                                "/vaccine/doctor/**").permitAll()
+                        .requestMatchers("/doctor/getAll",
+                                "/user/getAll").permitAll()
+                        .requestMatchers("/vaccinationCenter/getAll").permitAll()
+                        .requestMatchers("/dose/**").permitAll()
+                        .requestMatchers("/user/**",
+                                "/appointment/book")
+                        .hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/doctor/**",
+                                "/vaccinationCenter/**",
+                                "/vaccine/**")
+                        .hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthFilter,
+                        org.springframework.security.web.authentication
+                                .UsernamePasswordAuthenticationFilter.class)
+                .httpBasic(b -> b.disable())
+                .formLogin(f -> f.disable());
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/auth/**").permitAll()
+//                        .requestMatchers("/vaccine/getAll", "/vaccine/get/**", "/vaccine/doctor/**").permitAll()
+//                        .requestMatchers("/doctor/getAll", "/user/getAll").permitAll()
+//                        .requestMatchers("/vaccinationCenter/getAll").permitAll()
+//                        .requestMatchers("/dose/**").permitAll()
+//                        // Use string matchers for role-based as well
+//                        .requestMatchers("/user/**", "/appointment/book").hasAnyRole("USER", "ADMIN")
+//                        .requestMatchers("/doctor/add", "/doctor/associateWithCenter", "/doctor/**").hasRole("ADMIN")
+//                        .requestMatchers("/vaccinationCenter/**", "/vaccine/**").hasRole("ADMIN")
+//                        .anyRequest().authenticated())
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .httpBasic(basic -> basic.disable())
+//                .formLogin(form -> form.disable())
+//                .exceptionHandling(exceptions -> exceptions
+//                        .authenticationEntryPoint((request, response, authException) -> {
+//                            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+//                            response.setHeader("WWW-Authenticate", "None");
+//                            response.getWriter().write("{\"message\": \"Unauthorized - Please Login\"}");
+//                        }));
 
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://127.0.0.1:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }

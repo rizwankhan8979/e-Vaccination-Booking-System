@@ -10,8 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 public class RegisterRequestDto {
 
-    private String email;     // 🔐 login identity
-    private String password;  // 🔐 encrypted
+    private String email;     // login identity
+    private String password;  //encrypted
     //private Role role;
-
 }

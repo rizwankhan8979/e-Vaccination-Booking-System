@@ -18,7 +18,7 @@ public class UserService {
     @Autowired
     private AuthUserRepository authUserRepository;// NEW: For sending OTP emails
 
-    // ================= 1. ADD / COMPLETE PROFILE =================
+    // COMPLETE PROFILE
     public User addUser(User user, String loggedInEmail) {
 
         // logged-in auth user nikaalo
@@ -32,7 +32,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    // ================= 2. GET MY PROFILE =================
+    // GET MY PROFILE
     public User getMyProfile(String email) {
 
         AuthUser authUser = authUserRepository.findByEmail(email)
@@ -42,8 +42,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User profile not found"));
     }
 
-
-    // ================= 3. GET VACCINATION DATE =================
+    // GET VACCINATION DATE
     public Date getVaccDate(Integer userId) {
 
         User user = userRepository.findById(userId)
@@ -51,5 +50,10 @@ public class UserService {
 
         Dose dose = user.getDose();
         return dose != null ? dose.getVaccinationDate() : null;
+    }
+
+    // GET ALL USERS
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

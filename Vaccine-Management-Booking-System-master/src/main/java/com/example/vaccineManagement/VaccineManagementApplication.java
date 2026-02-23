@@ -8,7 +8,7 @@ public class VaccineManagementApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(VaccineManagementApplication.class, args);
-        System.out.println("Application Started....");
+		System.out.println("Application Started....");
 	}
 
 	@org.springframework.context.annotation.Bean
@@ -17,7 +17,7 @@ public class VaccineManagementApplication {
 			@Override
 			public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
 				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:3000")
+						.allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
 						.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
 						.allowedHeaders("*")
 						.allowCredentials(true);
