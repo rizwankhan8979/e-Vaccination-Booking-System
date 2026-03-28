@@ -79,10 +79,7 @@ public class SecurityConfig {
                                 .UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(b -> b.disable())
                 .formLogin(f -> f.disable());
-<<<<<<< HEAD
-
-=======
->>>>>>> b4f768d (Updated backend After Create Apis)
+        
         return http.build();
     }
 
